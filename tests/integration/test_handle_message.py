@@ -47,8 +47,6 @@ class FakeMessage:
 
 
 class ExplodingEmbedder:
-    dimensions = 384
-
     def embed(self, texts: list[str]) -> list[list[float]]:
         raise RuntimeError("model crashed")
 

@@ -7,9 +7,10 @@ from fastembed import TextEmbedding
 
 
 class Embedder(Protocol):
-    """Anything that maps texts to unit-length vectors. Tests use a fake; production uses `FastEmbedder`."""
+    """Anything that maps texts to unit-length 384-dimensional vectors (the size of `companies.embedding`).
 
-    dimensions: int
+    Tests use a fake; production uses `FastEmbedder`.
+    """
 
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
@@ -20,8 +21,6 @@ class FastEmbedder:
     The default, BAAI/bge-small-en-v1.5, returns 384-dimensional L2-normalised vectors. The weights
     (~65 MB) are downloaded once on first use and cached.
     """
-
-    dimensions = 384
 
     def __init__(self, model_name: str) -> None:
         # ONNX Runtime's default (one thread per logical core) was 4x slower than 4 threads on a

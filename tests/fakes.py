@@ -19,8 +19,6 @@ class FakeEmbedder:
     Satisfies the `Embedder` protocol without downloading a model, so tests stay fast and offline.
     """
 
-    dimensions = DIMENSIONS
-
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
 
