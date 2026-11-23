@@ -2,10 +2,10 @@
 
 from datetime import UTC, datetime, timedelta
 
-from app.repository import ApplyResult, apply_event, find_similar, get_company, record_rejection
 from psycopg import AsyncConnection
 
 from app.events import CompanyStruckOff, CompanyUpserted, InvalidEvent
+from app.repository import ApplyResult, apply_event, find_similar, get_company, record_rejection
 from tests.fakes import unit_vector
 
 T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)

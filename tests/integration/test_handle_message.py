@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 
 import psycopg
 import pytest
-from app.consumer import handle_message
 from psycopg import AsyncConnection
 
+from app.consumer import handle_message
 from app.db import connect
 from tests.fakes import FakeEmbedder
 

@@ -7,10 +7,10 @@ from collections.abc import AsyncIterator, Sequence
 
 import aio_pika
 import pytest
-from app.consumer import consume
 from psycopg import AsyncConnection
 
 from app.config import load_settings
+from app.consumer import consume
 from tests.fakes import FakeEmbedder
 
 QUEUE = "company-events-test"
