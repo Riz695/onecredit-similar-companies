@@ -239,16 +239,36 @@ handles millions of 384-dimension vectors on one machine. What I would change:
 
 ## 7. AI tools used
 
-I used **Claude Code** (Anthropic, model Claude Opus 5.5) throughout, as a pair programmer that I directed and reviewed:
+I used **Claude Code** (Anthropic's coding agent, running Claude Opus 5.5) for most of the hands-on work. I want to be
+clear about the split, since every commit is co-authored with it.
 
-- **Data analysis:** it wrote the throwaway scripts that profiled `feed.jsonl` (field variants, timestamp formats,
-  out-of-order events), and it checked the timestamp interpretations against neighbouring events.
-- **Design:** it proposed the design and listed every ambiguity with a recommendation. I reviewed the list and approved
-  it. The decisions are recorded in `docs/decisions.md`.
-- **Code and tests:** it wrote the tests first, then the implementation, as separate commits, and ran them against the real
-  Postgres and RabbitMQ. It also checked library APIs against the installed package source.
-- **Measurements:** it wrote and ran the latency benchmark, the HNSW-versus-exact check and the quality evaluation.
-- **Documentation:** it drafted this document and the README for my review.
+**What I did:**
 
-I can walk through and justify every line, and that is the bar I held the generated code to. No paid APIs are used by
-the solution itself; the embedding model runs locally on the CPU.
+- **Wrote the plan it worked from.** Before any code, I wrote down the requirements from the brief and the rules I
+  wanted followed:
+  - tests before implementation, in separate commits;
+  - acking a message only after the database commit;
+  - "latest `updatedAt` wins" enforced inside the database, not by read-then-write in Python;
+  - storing poison messages in our own table, since the queue can't have a dead-letter exchange;
+  - a fake embedder for unit tests;
+  - one optional deep-dive at most, and an honest "what's left" list.
+- **Made the design calls.** It profiled the feed and came back with every ambiguity it found (naive timestamps,
+  partial `data`, missing descriptions, struck-off events, and so on), each with a recommendation. I went through them
+  and accepted its recommendations. They are recorded in `docs/decisions.md`.
+- **Studying the result.** After it finished, I had it quiz me on my own design and wrote up the parts I got wrong. I'm
+  now going through the code file by file, because the next interview will be a walkthrough and I need to be able to
+  explain every line.
+
+**What Claude Code did:**
+
+- **Data analysis:** wrote the scripts that profiled `feed.jsonl` (field variants, timestamp formats, duplicates,
+  out-of-order events), and checked the timestamp readings against neighbouring events.
+- **Code and tests:** wrote the tests first and then the implementation, and ran everything against the real Postgres and
+  RabbitMQ from `docker-compose`. It checked library APIs against the installed package source rather than from memory.
+- **Measurements:** ran the latency benchmark, the HNSW-versus-exact comparison and the model evaluation. It found and
+  fixed the ONNX Runtime thread slowdown.
+- **Docs:** drafted the README and this document, which I reviewed. This section is in my own words.
+- **Verification:** ran the README from a fresh clone, and checked the final database against the raw feed with an
+  independent script.
+
+The solution itself calls no paid APIs; the embedding model runs locally on the CPU.

@@ -47,6 +47,10 @@ curl -s http://127.0.0.1:8000/companies/SYN-001550/similar | python3 -m json.too
 
 The interactive API docs are at http://127.0.0.1:8000/docs.
 
+A terminal recording of these exact steps, run from a fresh clone, is in
+[`docs/demo/readme-run.cast`](docs/demo/readme-run.cast). It covers the consumer, the API and its errors, a replay of the
+feed, lint and the full test suite. Play it with `asciinema play docs/demo/readme-run.cast`.
+
 If a port is taken, export `POSTGRES_PORT`, `RABBITMQ_PORT` or `API_PORT` before running the commands above. The consumer,
 the service and the tests read the same variables.
 
