@@ -72,24 +72,32 @@ class TestParseEvent:
     @pytest.mark.parametrize(
         ("raw", "reason"),
         [
-            (b'{"type": "company-upserted", "registrationNumber": "SYN-000509", "data": {"companyName": "Bes',
-             "invalid_json"),
+            (
+                b'{"type": "company-upserted", "registrationNumber": "SYN-000509", "data": {"companyName": "Bes',
+                "invalid_json",
+            ),
             (b"null", "not_an_object"),
             (b"\xff\xfe", "invalid_json"),
             (body(registrationNumber="SYN-000001", updatedAt="2026-08-14T09:00:00+08:00"), "unknown_type"),
             (upsert_body(type="company-renamed"), "unknown_type"),
             (upsert_body(registrationNumber=119), "invalid_registration_number"),
-            (body(type="company-upserted", updatedAt="2026-08-14T09:00:00+08:00", data={"companyName": "No Reg"}),
-             "invalid_registration_number"),
+            (
+                body(type="company-upserted", updatedAt="2026-08-14T09:00:00+08:00", data={"companyName": "No Reg"}),
+                "invalid_registration_number",
+            ),
             (upsert_body(updatedAt=None), "invalid_updated_at"),
             (upsert_body(updatedAt="yesterday"), "invalid_updated_at"),
             (upsert_body(data="companyName=Foo; state=Perak"), "invalid_data"),
             (upsert_body(data=None), "invalid_data"),
             (upsert_body(data={"companyName": "Unknown"}), "invalid_data"),
-            (upsert_body(data={"companyName": "", "natureOfBusiness": "x", "state": None, "industry": None}),
-             "invalid_data"),
-            (upsert_body(data={"companyName": "A", "natureOfBusiness": 5, "state": None, "industry": None}),
-             "invalid_data"),
+            (
+                upsert_body(data={"companyName": "", "natureOfBusiness": "x", "state": None, "industry": None}),
+                "invalid_data",
+            ),
+            (
+                upsert_body(data={"companyName": "A", "natureOfBusiness": 5, "state": None, "industry": None}),
+                "invalid_data",
+            ),
         ],
     )
     def test_rejections_carry_a_reason(self, raw: bytes, reason: str) -> None:

@@ -32,7 +32,8 @@ asyncio_default_test_loop_scope = "session"
 markers = ["integration: needs Postgres and RabbitMQ from docker compose (just up)"]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
+extend-exclude = ["producer"]  # provided by the assessment; left untouched
 target-version = "py314"
 
 [tool.ruff.lint]
