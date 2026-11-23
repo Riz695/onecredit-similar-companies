@@ -4,6 +4,8 @@ The service behind the OneCredit portal's **"Similar companies"** panel. This is
 (`mle-v2026.11`). The original brief is in [`docs/assessment-brief.md`](docs/assessment-brief.md), and the reasoning is in
 [`DESIGN.md`](DESIGN.md).
 
+**▶ Video demo (5 min):** https://youtu.be/Sz0npbm7Udc
+
 - A **consumer** reads the registry's `company-events` queue, validates each message, embeds the business description,
   and keeps one row per company in Postgres with pgvector. Each row always holds the company's latest state by `updatedAt`.
 - A **service** answers `GET /companies/{registrationNumber}/similar` with the most similar companies first. The search runs
