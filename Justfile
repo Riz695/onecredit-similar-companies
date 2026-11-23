@@ -40,3 +40,11 @@ test-unit:
 lint:
     uv run ruff check .
     uv run ruff format --check .
+
+# Measure p50/p95/p99 latency of the endpoint (needs `just serve` running and the feed consumed).
+bench:
+    uv run python -m scripts.bench_latency
+
+# Compare embedding models on recommendation quality (needs the feed consumed).
+evaluate:
+    uv run python -m scripts.evaluate_quality

@@ -81,3 +81,12 @@ Also agreed (design proposal):
   (pgvector ≥ 0.8), so the filtered query (active, has embedding, not itself) still finds enough neighbours. The
   candidates are re-sorted exactly with a tie-break on registration number.
 - **Lint scope:** ruff excludes `producer/` (provided by the assessment, left untouched).
+- **Deep-dive result (recommendation quality):** on the loaded feed, different-text precision@4 is 0.30 for hashed
+  bag-of-words, 0.49 for `BAAI/bge-small-en-v1.5`, 0.80 for `paraphrase-multilingual-MiniLM-L12-v2`; the
+  cross-language rate is 0.05 / 0.13 / 0.69. Planning decision 15 said to keep bge-small-en and measure, so the default
+  stays; the multilingual model (also 384 dims) is one `EMBEDDING_MODEL` change away and is the first recommendation in
+  DESIGN.md.
+- **HNSW accuracy:** for all 1,953 searchable companies, the index returns exactly the same top 4 as an exact scan
+  (`enable_indexscan = off`).
+- **Latency (laptop, Docker Desktop):** 1 request in flight p50 5.5 ms / p95 9.4 ms / p99 15.6 ms; 10 in flight
+  p50 18.6 / p95 38.5 / p99 53.6 ms (459 req/s). The SQL itself takes ~1.5 ms (`EXPLAIN ANALYZE`).
