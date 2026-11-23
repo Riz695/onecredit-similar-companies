@@ -64,3 +64,20 @@ Also agreed (design proposal):
 ## Execution decisions
 
 <!-- Appended during Stage 2. -->
+- **Queue declaration:** the consumer declares `company-events` with `durable=True` and no arguments, exactly like
+  the registry's producer, instead of `passive=True`. Identical arguments are accepted by RabbitMQ, and the consumer
+  can then start before the first `just publish`.
+- **Unexpected errors:** `psycopg.OperationalError` (database unreachable) → nack with requeue and reconnect, forever.
+  Any other exception → requeue once; if the message is already a redelivery, store it as `processing_error` in
+  `rejected_events` and ack. Caveat: a message redelivered because the consumer crashed gets no second retry.
+- **Equal `updatedAt`:** the first arrival wins (`<` not `<=`). The feed has no equal-timestamp conflicts.
+- **Struck-off before any upsert:** stores a row with only the status (name null). An older upsert arriving later is
+  then stale, so that company would have no details. Not present in the feed; listed under "What's left".
+- **ONNX Runtime threads:** `threads=min(4, cpu_count)`. The default (one per logical core) measured 23 ms/text vs
+  5 ms/text with 4 threads on a 12-thread laptop. Full feed: 3m21s → 1m14s.
+- **Throughput:** each message costs ~7 ms of commit (Docker Desktop VM fsync) + ~5 ms of embedding. Processing one
+  message per transaction keeps ack-after-commit trivial; batching is the first 10x change.
+- **HNSW search settings:** each connection sets `hnsw.ef_search = 100` and `hnsw.iterative_scan = relaxed_order`
+  (pgvector ≥ 0.8), so the filtered query (active, has embedding, not itself) still finds enough neighbours. The
+  candidates are re-sorted exactly with a tie-break on registration number.
+- **Lint scope:** ruff excludes `producer/` (provided by the assessment, left untouched).

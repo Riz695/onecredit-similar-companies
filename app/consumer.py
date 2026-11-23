@@ -89,7 +89,7 @@ async def _store(body: bytes, message_id: str, connection: AsyncConnection, embe
     if isinstance(event, CompanyUpserted) and event.description:
         # The model is CPU-bound; run it in a thread so the AMQP connection keeps its heartbeats.
         [embedding] = await asyncio.to_thread(embedder.embed, [event.description])
-    return await apply_event(connection, message_id, event, embedding)
+    return (await apply_event(connection, message_id, event, embedding)).value
 
 
 async def consume(

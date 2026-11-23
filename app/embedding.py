@@ -1,5 +1,6 @@
 """Turning a business description into a vector."""
 
+import os
 from typing import Protocol
 
 from fastembed import TextEmbedding
@@ -23,7 +24,9 @@ class FastEmbedder:
     dimensions = 384
 
     def __init__(self, model_name: str) -> None:
-        self._model = TextEmbedding(model_name)
+        # ONNX Runtime's default (one thread per logical core) was 4x slower than 4 threads on a
+        # 12-thread laptop for one short text at a time: the threads mostly wait on each other.
+        self._model = TextEmbedding(model_name, threads=min(4, os.cpu_count() or 1))
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return [vector.tolist() for vector in self._model.embed(texts)]
