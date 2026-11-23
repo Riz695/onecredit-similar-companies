@@ -92,6 +92,12 @@ Also agreed (design proposal):
   p50 18.6 / p95 38.5 / p99 53.6 ms (459 req/s). The SQL itself takes ~1.5 ms (`EXPLAIN ANALYZE`).
 - **Incident:** one `git push` hung on the network with no output; it was killed and retried successfully. Later
   pushes use a timeout. No history was rewritten.
+- **RabbitMQ startup race (fix to the provided `docker-compose.yml`):** `just up` failed intermittently with
+  `Error when reading /var/lib/rabbitmq/.erlang.cookie: eacces`. The healthcheck ran `rabbitmq-diagnostics` as root
+  every 3 s; when it ran before the server had created its Erlang cookie, it created a root-owned `0400` cookie that the
+  server (running as `rabbitmq`) could not read. It failed twice in a row on a busy laptop. The healthcheck now runs
+  through `gosu rabbitmq`, so any cookie it creates belongs to `rabbitmq`. After the fix: 6/6 clean `just down && just up`
+  cycles under load. This is the only change to the assessment's infrastructure files.
 
 ## Final verification (2026-11-23)
 
