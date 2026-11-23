@@ -1,19 +1,15 @@
 """The consumer against real RabbitMQ: crafted duplicates, out-of-order and malformed messages."""
 
 import asyncio
-import hashlib
 import json
-from collections.abc import AsyncIterator, Sequence
 
-import aio_pika
 import pytest
 from psycopg import AsyncConnection
 
 from app.config import load_settings
 from app.consumer import consume
 from tests.fakes import FakeEmbedder
-
-QUEUE = "company-events-test"
+from tests.integration.amqp import TEST_QUEUE, delete_queue, publish
 
 
 def event(number: object, updated_at: object, description: str | None, **extra: object) -> str:
@@ -47,30 +43,13 @@ EXPECTED_COMPANIES = [
 ]
 
 
-async def publish(lines: Sequence[str]) -> None:
-    """Publish like the registry's producer: message_id = sha256(body), persistent."""
-    async with await aio_pika.connect_robust(load_settings().rabbitmq_url) as connection:
-        channel = await connection.channel(publisher_confirms=True)
-        await channel.declare_queue(QUEUE, durable=True)
-        for line in lines:
-            message = aio_pika.Message(
-                line.encode(),
-                message_id=hashlib.sha256(line.encode()).hexdigest(),
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-            )
-            await channel.default_exchange.publish(message, routing_key=QUEUE)
-
-
 @pytest.fixture(autouse=True)
-async def empty_queue() -> AsyncIterator[None]:
-    async with await aio_pika.connect_robust(load_settings().rabbitmq_url) as connection:
-        channel = await connection.channel()
-        await channel.queue_delete(QUEUE)
-    yield
+async def empty_queue() -> None:
+    await delete_queue()
 
 
 async def run_until_idle(database_url: str) -> None:
-    await consume(database_url, load_settings().rabbitmq_url, FakeEmbedder(), queue_name=QUEUE, idle_timeout=1.5)
+    await consume(database_url, load_settings().rabbitmq_url, FakeEmbedder(), queue_name=TEST_QUEUE, idle_timeout=1.5)
 
 
 async def companies(db: AsyncConnection) -> list[tuple]:
