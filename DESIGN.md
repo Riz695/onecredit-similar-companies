@@ -144,6 +144,19 @@ LIMIT $2
   `{"error": {"code", "message"}}`. Codes: 404 `company_not_found`, 422 `invalid_parameter`, 500 `internal_error`. The
   README has the full table.
 
+### Infrastructure: one fix to the provided `docker-compose.yml`
+
+`just up` sometimes failed: RabbitMQ exited with `Error when reading /var/lib/rabbitmq/.erlang.cookie: eacces`.
+
+- **Cause:** the healthcheck ran `rabbitmq-diagnostics` as root every 3 s. When it ran before the server had created its
+  Erlang cookie, the root process created the cookie itself, readable only by root. The server runs as the `rabbitmq`
+  user, so it could not read the file and crashed.
+- **When it shows up:** it is a race, more likely on a busy machine. It happened twice in a row on my laptop.
+- **Fix:** the healthcheck now runs through `gosu rabbitmq`, so any cookie it creates belongs to the server's user. After
+  the change, `just down && just up` succeeded 6 times out of 6 under load.
+- **Scope:** this is the only change to the assessment's infrastructure files. The queue declaration, ports and images are
+  unchanged.
+
 ### Latency
 
 Measured with `just bench` on a laptop with Docker Desktop. It requests all 2,000 companies in random order through HTTP:
@@ -234,6 +247,10 @@ handles millions of 384-dimension vectors on one machine. What I would change:
   failure, gets no second retry. A proper attempt counter would need our own table, because headers cannot be changed on
   requeue.
 - **Model choice:** see the deep-dive. Switching to the multilingual model is a measured improvement I did not make.
+- **The real model is not covered by pytest.** Every test uses the deterministic fake embedder, so the suite runs offline
+  in about 90 seconds. The real model is exercised by `just evaluate`, `just bench` and the fresh-clone verification,
+  but not by an automated test. Next step: one small test, marked so it can be skipped, that loads the real model and
+  checks a known pair (a café description is closer to a coffee-shop one than to a logistics one).
 - **No metrics endpoint.** There are logs, but no Prometheus counters for applied, stale, duplicate and rejected messages.
 - **No explanation** of why a company was recommended, beyond the similarity score.
 
@@ -255,9 +272,11 @@ clear about the split, since every commit is co-authored with it.
 - **Made the design calls.** It profiled the feed and came back with every ambiguity it found (naive timestamps,
   partial `data`, missing descriptions, struck-off events, and so on), each with a recommendation. I went through them
   and accepted its recommendations. They are recorded in `docs/decisions.md`.
-- **Studying the result.** After it finished, I had it quiz me on my own design and wrote up the parts I got wrong. I'm
-  now going through the code file by file, because the next interview will be a walkthrough and I need to be able to
-  explain every line.
+- **Studied the result.** After it finished, I had it quiz me on my own design and wrote up the parts I got wrong. Then I
+  went through the code file by file, line by line, answering a check question on each file, because the next
+  interview will be a walkthrough.
+- **Recorded the demo.** I recorded and narrated the [video demo](https://youtu.be/Sz0npbm7Udc) myself, explaining the
+  design as I ran it.
 
 **What Claude Code did:**
 
