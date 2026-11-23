@@ -114,8 +114,7 @@ async def apply_event(
 async def record_rejection(connection: AsyncConnection, message_id: str, body: bytes, error: InvalidEvent) -> None:
     """Keep a message we could not apply, with why. A redelivery of the same message is stored once."""
     await connection.execute(
-        "INSERT INTO rejected_events (message_id, reason, detail, body) VALUES (%s, %s, %s, %s)"
-        " ON CONFLICT DO NOTHING",
+        "INSERT INTO rejected_events (message_id, reason, detail, body) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
         (message_id, error.reason, str(error), body.decode("utf-8", errors="replace")),
     )
 
