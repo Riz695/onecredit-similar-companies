@@ -90,3 +90,17 @@ Also agreed (design proposal):
   (`enable_indexscan = off`).
 - **Latency (laptop, Docker Desktop):** 1 request in flight p50 5.5 ms / p95 9.4 ms / p99 15.6 ms; 10 in flight
   p50 18.6 / p95 38.5 / p99 53.6 ms (459 req/s). The SQL itself takes ~1.5 ms (`EXPLAIN ANALYZE`).
+- **Incident:** one `git push` hung on the network with no output; it was killed and retried successfully. Later
+  pushes use a timeout. No history was rewritten.
+
+## Final verification (2026-11-23)
+
+From a fresh clone, following README.md literally (`just down`, `setup`, `up`, `publish`, `consumer`, `serve`):
+
+- Consumer: `applied 2352, duplicate 63, rejected 37, stale 66` in 78 s.
+- An independent script re-derived the expected latest state from the raw feed: 2,000 expected, 2,000 stored,
+  0 missing, 0 extra, 0 with wrong status/name/state/`updatedAt`.
+- Second `just publish`: `duplicate 2481, rejected 37`; md5 of all company rows (including embeddings) unchanged.
+- `just test`: 101 passed. `just lint`: clean.
+- API: SYN-001550 returns the mock's companies (Seri Sejahtera, Gemilang Delima, Everbright Pacific Food); 404, 422 and
+  `no_description` responses as documented.
